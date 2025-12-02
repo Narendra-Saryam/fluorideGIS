@@ -18,11 +18,23 @@ export default function Page() {
     setSelected(feature.properties);
   };
 
-  const handleSearch = (feature) => {
-    if (feature && mapRef) {
-      const coords = feature.geometry.coordinates;
+  const handleSearch = (searchResult) => {
+    if (!searchResult || !mapRef) return;
+    
+    const { type, data } = searchResult;
+    
+    if (type === 'feature' && data) {
+      // Single location
+      const coords = data.geometry.coordinates;
       mapRef.flyTo([coords[1], coords[0]], 15, { duration: 1.5 });
-      handleSelect(feature);
+      handleSelect(data);
+    }
+  };
+
+  const handleResetView = () => {
+    if (mapRef) {
+      mapRef.flyTo([21.15, 79.08], 10, { duration: 1.5 });
+      setSelected(null);
     }
   };
 
@@ -39,56 +51,88 @@ export default function Page() {
         background: 'rgba(15, 23, 42, 0.95)',
         backdropFilter: 'blur(10px)',
         borderBottom: '1px solid rgba(148, 163, 184, 0.1)',
-        padding: '20px 32px',
+        padding: 'clamp(12px, 3vw, 16px) clamp(12px, 4vw, 24px)',
         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
       }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <h1 style={{ 
-            fontSize: '32px', 
+            fontSize: 'clamp(18px, 5vw, 28px)', 
             fontWeight: '700', 
-            margin: '0 0 8px 0',
+            margin: '0 0 clamp(4px, 1vw, 6px) 0',
             background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
+            backgroundClip: 'text',
+            lineHeight: '1.2'
           }}>
-            Nagpur Fluoride GIS Monitoring System
+            Nagpur Water Quality Monitoring System
           </h1>
           <p style={{ 
             margin: 0, 
             color: '#94a3b8',
-            fontSize: '14px'
+            fontSize: 'clamp(11px, 2.5vw, 13px)',
+            lineHeight: '1.4'
           }}>
-            Real-time fluoride contamination tracking across Nagpur district | 602 testing locations
+            Comprehensive fluoride & nitrate contamination tracking | 1,126+ testing locations across Nagpur district
           </p>
         </div>
       </header>
 
       {/* Main Content */}
       <div style={{ 
-        padding: '24px 32px',
-        maxWidth: '1400px',
+        padding: 'clamp(12px, 3vw, 20px) clamp(12px, 4vw, 24px)',
+        maxWidth: '1280px',
         margin: '0 auto'
       }}>
         {/* Search Bar */}
         <div style={{
-          marginBottom: '24px',
+          marginBottom: 'clamp(12px, 3vw, 20px)',
           background: 'rgba(30, 41, 59, 0.8)',
           backdropFilter: 'blur(10px)',
-          padding: '20px',
-          borderRadius: '16px',
+          padding: 'clamp(12px, 3vw, 16px)',
+          borderRadius: 'clamp(8px, 2vw, 12px)',
           border: '1px solid rgba(148, 163, 184, 0.1)',
           boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)'
         }}>
-          {geojson && <SearchBar geojson={geojson} onSelect={handleSearch} />}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(10px, 2vw, 12px)' }}>
+            {geojson && <SearchBar geojson={geojson} onSelect={handleSearch} />}
+            
+            {/* Reset View Button */}
+            <button
+              onClick={handleResetView}
+              style={{
+                padding: 'clamp(9px, 2vw, 10px) clamp(20px, 4vw, 28px)',
+                borderRadius: 'clamp(6px, 1.5vw, 8px)',
+                border: 'none',
+                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: 'clamp(12px, 2.5vw, 13px)',
+                fontWeight: '600',
+                boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)',
+                transition: 'all 0.3s ease',
+                whiteSpace: 'nowrap'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 6px 20px rgba(239, 68, 68, 0.5)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 15px rgba(239, 68, 68, 0.4)';
+              }}
+            >
+              🔄 Reset Map View
+            </button>
+          </div>
         </div>
 
         {/* Map Container */}
         <div style={{
           background: 'rgba(30, 41, 59, 0.6)',
           backdropFilter: 'blur(10px)',
-          padding: '16px',
-          borderRadius: '20px',
+          padding: 'clamp(8px, 2vw, 12px)',
+          borderRadius: 'clamp(12px, 3vw, 16px)',
           border: '2px solid rgba(148, 163, 184, 0.2)',
           boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2)',
           overflow: 'hidden'
@@ -104,36 +148,88 @@ export default function Page() {
 
         {/* Legend */}
         <div style={{
-          marginTop: '24px',
+          marginTop: 'clamp(12px, 3vw, 20px)',
           background: 'rgba(30, 41, 59, 0.8)',
           backdropFilter: 'blur(10px)',
-          padding: '20px',
-          borderRadius: '16px',
+          padding: 'clamp(14px, 3vw, 18px)',
+          borderRadius: 'clamp(8px, 2vw, 12px)',
           border: '1px solid rgba(148, 163, 184, 0.1)',
-          display: 'flex',
-          gap: '24px',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          alignItems: 'center'
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+          gap: 'clamp(16px, 4vw, 24px)'
         }}>
-          <div style={{ fontSize: '14px', fontWeight: '600', color: '#cbd5e1' }}>Fluoride Levels:</div>
-          {[
-            { color: '#1a9850', label: 'Safe (<1.0 mg/L)' },
-            { color: '#fc8d59', label: 'Moderate (1.0-1.5 mg/L)' },
-            { color: '#d73027', label: 'High (1.5-5.0 mg/L)' },
-            { color: '#8b0000', label: 'Critical (≥5.0 mg/L)' }
-          ].map(item => (
-            <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{
-                width: '16px',
-                height: '16px',
-                borderRadius: '50%',
-                background: item.color,
-                border: '2px solid rgba(255, 255, 255, 0.3)'
-              }} />
-              <span style={{ fontSize: '13px', color: '#cbd5e1' }}>{item.label}</span>
+          {/* Fluoride Legend */}
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#60a5fa', marginBottom: '12px', borderBottom: '2px solid rgba(96, 165, 250, 0.3)', paddingBottom: '6px' }}>
+              💧 Fluoride Levels (mg/L)
             </div>
-          ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { color: '#1a9850', label: 'Safe', range: '<1.0' },
+                { color: '#fc8d59', label: 'Moderate', range: '1.0-1.5' },
+                { color: '#d73027', label: 'High', range: '1.5-5.0' },
+                { color: '#8b0000', label: 'Critical', range: '≥5.0' }
+              ].map(item => (
+                <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '50%',
+                    background: item.color,
+                    border: '2px solid rgba(255, 255, 255, 0.4)',
+                    flexShrink: 0
+                  }} />
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontSize: '12px', color: '#e2e8f0', fontWeight: '600' }}>{item.label}</span>
+                    <span style={{ fontSize: '11px', color: '#94a3b8', marginLeft: '6px' }}>({item.range})</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Nitrate Legend */}
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#a78bfa', marginBottom: '12px', borderBottom: '2px solid rgba(167, 139, 250, 0.3)', paddingBottom: '6px' }}>
+              🧪 Nitrate Levels (mg/L)
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { color: '#22c55e', label: 'Safe', range: '≤20' },
+                { color: '#ea580c', label: 'Moderate', range: '20-45' },
+                { color: '#7c2d12', label: 'High', range: '>45' }
+              ].map(item => (
+                <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{
+                    width: '16px',
+                    height: '16px',
+                    borderRadius: '50%',
+                    background: item.color,
+                    border: '2px solid rgba(255, 255, 255, 0.4)',
+                    flexShrink: 0
+                  }} />
+                  <div style={{ flex: 1 }}>
+                    <span style={{ fontSize: '13px', color: '#e2e8f0', fontWeight: '600' }}>{item.label}</span>
+                    <span style={{ fontSize: '12px', color: '#94a3b8', marginLeft: '8px' }}>({item.range})</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Data Sources */}
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: '#fbbf24', marginBottom: '12px', borderBottom: '2px solid rgba(251, 191, 36, 0.3)', paddingBottom: '6px' }}>
+              📊 Data Sources
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', color: '#cbd5e1' }}>
+              <div>• GSDA Report (2021-23): 602 sites</div>
+              <div>• Aquifer Study I: 192 sites</div>
+              <div>• Aquifer Study II: 85 sites</div>
+              <div>• Nitrate Monitoring: 247 sites</div>
+              <div style={{ marginTop: '6px', fontSize: '11px', color: '#94a3b8' }}>Total: 1,126 locations</div>
+            </div>
+          </div>
         </div>
       </div>
     </main>

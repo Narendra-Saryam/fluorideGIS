@@ -2,147 +2,232 @@
 import { useState } from 'react';
 
 export default function SearchBar({ geojson, onSelect }) {
-  const [q, setQ] = useState('');
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [tehsil, setTehsil] = useState('');
+  const [siteName, setSiteName] = useState('');
+  const [coordinates, setCoordinates] = useState('');
 
-  const handleInputChange = (e) => {
-    const value = e.target.value;
-    setQ(value);
+  const handleSearch = (level) => {
+    if (!geojson) return alert('GeoJSON not loaded');
     
-    if (value.trim() && geojson) {
-      const matches = geojson.features
-        .filter(f => 
-          f.properties.village?.toLowerCase().includes(value.toLowerCase()) ||
-          f.properties.block?.toLowerCase().includes(value.toLowerCase()) ||
-          f.properties.location?.toLowerCase().includes(value.toLowerCase())
-        )
-        .slice(0, 8);
-      setSuggestions(matches);
-      setShowSuggestions(matches.length > 0);
+    // Level 1: Search by Tehsil only
+    if (level === 1 && tehsil.trim()) {
+      const searchTerm = tehsil.trim().toLowerCase();
+      const match = geojson.features.find(f => 
+        f.properties.block?.toLowerCase() === searchTerm ||
+        f.properties.block?.toLowerCase().includes(searchTerm)
+      );
+      if (match) {
+        onSelect({ type: 'feature', data: match });
+      } else {
+        alert('Tehsil not found. Try: Ramtek, Katol, Hingna, etc.');
+      }
+    }
+    
+    // Level 2: Search by Tehsil + Site Name
+    else if (level === 2 && tehsil.trim() && siteName.trim()) {
+      const tehsilTerm = tehsil.trim().toLowerCase();
+      const siteTerm = siteName.trim().toLowerCase();
+      const match = geojson.features.find(f => 
+        f.properties.block?.toLowerCase().includes(tehsilTerm) &&
+        (f.properties.location?.toLowerCase().includes(siteTerm) ||
+         f.properties.village?.toLowerCase().includes(siteTerm))
+      );
+      if (match) {
+        onSelect({ type: 'feature', data: match });
+      } else {
+        alert('Location not found with that Tehsil and Site combination.');
+      }
+    }
+    
+    // Level 3: Search by Tehsil + Site + Coordinates
+    else if (level === 3 && tehsil.trim() && siteName.trim() && coordinates.trim()) {
+      const tehsilTerm = tehsil.trim().toLowerCase();
+      const siteTerm = siteName.trim().toLowerCase();
+      const coordParts = coordinates.trim().split(',').map(c => c.trim());
+      
+      if (coordParts.length !== 2) {
+        alert('Please enter coordinates in format: latitude, longitude');
+        return;
+      }
+      
+      const lat = parseFloat(coordParts[0]);
+      const lng = parseFloat(coordParts[1]);
+      
+      if (isNaN(lat) || isNaN(lng)) {
+        alert('Invalid coordinates. Format: 21.3889, 79.3483');
+        return;
+      }
+      
+      const match = geojson.features.find(f => {
+        const [fLng, fLat] = f.geometry.coordinates;
+        return f.properties.block?.toLowerCase().includes(tehsilTerm) &&
+               (f.properties.location?.toLowerCase().includes(siteTerm) ||
+                f.properties.village?.toLowerCase().includes(siteTerm)) &&
+               Math.abs(fLat - lat) < 0.001 &&
+               Math.abs(fLng - lng) < 0.001;
+      });
+      
+      if (match) {
+        onSelect({ type: 'feature', data: match });
+      } else {
+        alert('Exact location not found. Try adjusting coordinates slightly.');
+      }
     } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
+      alert('Please fill in the required fields for this search level.');
     }
   };
 
-  const handleSearch = () => {
-    if (!geojson) return alert('GeoJSON not loaded');
-    const match = geojson.features.find(f => 
-      f.properties.village?.toLowerCase() === q.trim().toLowerCase() ||
-      f.properties.location?.toLowerCase().includes(q.trim().toLowerCase())
-    );
-    if (!match) return alert('Location not found. Try searching by village or block name.');
-    onSelect(match);
-    setShowSuggestions(false);
-  };
-
-  const handleSelectSuggestion = (feature) => {
-    setQ(feature.properties.village || feature.properties.location);
-    onSelect(feature);
-    setShowSuggestions(false);
-  };
-
   return (
-    <div style={{ position: 'relative' }}>
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-        <div style={{ flex: 1, position: 'relative' }}>
-          <input 
-            value={q} 
-            onChange={handleInputChange}
-            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="Search by village, block, or location..." 
-            style={{ 
-              width: '100%',
-              padding: '14px 20px',
-              fontSize: '15px',
-              background: 'rgba(15, 23, 42, 0.6)',
-              border: '2px solid rgba(148, 163, 184, 0.2)',
-              borderRadius: '12px',
-              color: '#e2e8f0',
-              outline: 'none',
-              transition: 'all 0.3s ease',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.2)'
-            }}
-            onFocus={(e) => {
-              e.target.style.borderColor = '#60a5fa';
-              e.target.style.boxShadow = '0 0 0 3px rgba(96, 165, 250, 0.1)';
-            }}
-            onBlur={(e) => {
-              setTimeout(() => setShowSuggestions(false), 200);
-              e.target.style.borderColor = 'rgba(148, 163, 184, 0.2)';
-              e.target.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.2)';
-            }}
-          />
-          
-          {showSuggestions && suggestions.length > 0 && (
-            <div style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              marginTop: '8px',
-              background: 'rgba(15, 23, 42, 0.95)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(148, 163, 184, 0.2)',
-              borderRadius: '12px',
-              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4)',
-              maxHeight: '300px',
-              overflowY: 'auto',
-              zIndex: 1000
-            }}>
-              {suggestions.map((feature, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => handleSelectSuggestion(feature)}
-                  style={{
-                    padding: '12px 16px',
-                    cursor: 'pointer',
-                    borderBottom: idx < suggestions.length - 1 ? '1px solid rgba(148, 163, 184, 0.1)' : 'none',
-                    transition: 'background 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => e.target.style.background = 'rgba(96, 165, 250, 0.1)'}
-                  onMouseLeave={(e) => e.target.style.background = 'transparent'}
-                >
-                  <div style={{ fontWeight: '600', color: '#e2e8f0', marginBottom: '4px' }}>
-                    {feature.properties.village}
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#94a3b8' }}>
-                    {feature.properties.location} • {feature.properties.block}
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#60a5fa', marginTop: '4px' }}>
-                    Fluoride: {feature.properties.fluoride} mg/L
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        
-        <button 
-          onClick={handleSearch}
+    <div style={{ width: '100%', maxWidth: '100%' }}>
+      {/* Three Input Fields */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))',
+        gap: 'clamp(8px, 2vw, 10px)',
+        marginBottom: 'clamp(10px, 2vw, 12px)'
+      }}>
+        <input
+          type="text"
+          placeholder="Tehsil Name (e.g., Ramtek)"
+          value={tehsil}
+          onChange={(e) => setTehsil(e.target.value)}
           style={{
-            padding: '14px 32px',
-            fontSize: '15px',
-            fontWeight: '600',
-            background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            cursor: 'pointer',
+            padding: 'clamp(10px, 2vw, 11px) clamp(12px, 2.5vw, 14px)',
+            borderRadius: 'clamp(6px, 1.5vw, 8px)',
+            border: '2px solid rgba(148, 163, 184, 0.2)',
+            fontSize: 'clamp(12px, 2.5vw, 13px)',
+            background: 'rgba(15, 23, 42, 0.6)',
+            color: '#e2e8f0',
+            outline: 'none',
             transition: 'all 0.3s ease',
-            boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.4)'
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          }}
+          onFocus={(e) => e.target.style.borderColor = '#60a5fa'}
+          onBlur={(e) => e.target.style.borderColor = 'rgba(148, 163, 184, 0.2)'}
+        />
+        <input
+          type="text"
+          placeholder="Site Name (e.g., Amgaon)"
+          value={siteName}
+          onChange={(e) => setSiteName(e.target.value)}
+          style={{
+            padding: 'clamp(10px, 2vw, 11px) clamp(12px, 2.5vw, 14px)',
+            borderRadius: 'clamp(6px, 1.5vw, 8px)',
+            border: '2px solid rgba(148, 163, 184, 0.2)',
+            fontSize: 'clamp(12px, 2.5vw, 13px)',
+            background: 'rgba(15, 23, 42, 0.6)',
+            color: '#e2e8f0',
+            outline: 'none',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          }}
+          onFocus={(e) => e.target.style.borderColor = '#60a5fa'}
+          onBlur={(e) => e.target.style.borderColor = 'rgba(148, 163, 184, 0.2)'}
+        />
+        <input
+          type="text"
+          placeholder="Coordinates (e.g., 21.3889, 79.3483)"
+          value={coordinates}
+          onChange={(e) => setCoordinates(e.target.value)}
+          style={{
+            padding: 'clamp(10px, 2vw, 11px) clamp(12px, 2.5vw, 14px)',
+            borderRadius: 'clamp(6px, 1.5vw, 8px)',
+            border: '2px solid rgba(148, 163, 184, 0.2)',
+            fontSize: 'clamp(12px, 2.5vw, 13px)',
+            background: 'rgba(15, 23, 42, 0.6)',
+            color: '#e2e8f0',
+            outline: 'none',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          }}
+          onFocus={(e) => e.target.style.borderColor = '#60a5fa'}
+          onBlur={(e) => e.target.style.borderColor = 'rgba(148, 163, 184, 0.2)'}
+        />
+      </div>
+
+      {/* Three Search Buttons */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 150px), 1fr))',
+        gap: 'clamp(8px, 2vw, 10px)'
+      }}>
+        <button
+          onClick={() => handleSearch(1)}
+          style={{
+            padding: 'clamp(10px, 2vw, 11px) clamp(16px, 3vw, 20px)',
+            borderRadius: 'clamp(6px, 1.5vw, 8px)',
+            border: 'none',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            cursor: 'pointer',
+            fontSize: 'clamp(12px, 2.5vw, 13px)',
+            fontWeight: '600',
+            boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+            transition: 'all 0.3s ease',
+            whiteSpace: 'nowrap'
           }}
           onMouseEnter={(e) => {
             e.target.style.transform = 'translateY(-2px)';
-            e.target.style.boxShadow = '0 10px 15px -3px rgba(59, 130, 246, 0.5)';
+            e.target.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.5)';
           }}
           onMouseLeave={(e) => {
             e.target.style.transform = 'translateY(0)';
-            e.target.style.boxShadow = '0 4px 6px -1px rgba(59, 130, 246, 0.4)';
+            e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
           }}
         >
-          🔍 Search Location
+          🗺️ Search Tehsil
+        </button>
+        <button
+          onClick={() => handleSearch(2)}
+          style={{
+            padding: 'clamp(10px, 2vw, 11px) clamp(16px, 3vw, 20px)',
+            borderRadius: 'clamp(6px, 1.5vw, 8px)',
+            border: 'none',
+            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            color: 'white',
+            cursor: 'pointer',
+            fontSize: 'clamp(12px, 2.5vw, 13px)',
+            fontWeight: '600',
+            boxShadow: '0 4px 15px rgba(240, 147, 251, 0.4)',
+            transition: 'all 0.3s ease',
+            whiteSpace: 'nowrap'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'translateY(-2px)';
+            e.target.style.boxShadow = '0 6px 20px rgba(240, 147, 251, 0.5)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = '0 4px 15px rgba(240, 147, 251, 0.4)';
+          }}
+        >
+          📍 Tehsil + Site
+        </button>
+        <button
+          onClick={() => handleSearch(3)}
+          style={{
+            padding: 'clamp(10px, 2vw, 11px) clamp(16px, 3vw, 20px)',
+            borderRadius: 'clamp(6px, 1.5vw, 8px)',
+            border: 'none',
+            background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            color: 'white',
+            cursor: 'pointer',
+            fontSize: 'clamp(12px, 2.5vw, 13px)',
+            fontWeight: '600',
+            boxShadow: '0 4px 15px rgba(79, 172, 254, 0.4)',
+            transition: 'all 0.3s ease',
+            whiteSpace: 'nowrap'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'translateY(-2px)';
+            e.target.style.boxShadow = '0 6px 20px rgba(79, 172, 254, 0.5)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = '0 4px 15px rgba(79, 172, 254, 0.4)';
+          }}
+        >
+          🎯 Precise Search
         </button>
       </div>
     </div>
