@@ -1,6 +1,11 @@
 export const metadata = {
-  title: 'Nagpur Fluoride GIS',
-  description: 'Demo GIS + AI map for Nagpur district'
+  title: 'Nagpur Water Quality Monitoring',
+  description: 'Comprehensive fluoride & nitrate contamination tracking across Nagpur district',
+  icons: {
+    icon: '/fno3.webp',
+    shortcut: '/fno3.webp',
+    apple: '/fno3.webp',
+  },
 };
 
 export default function RootLayout({ children }) {

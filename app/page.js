@@ -1,5 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import SearchBar from "../components/SearchBar";
 
@@ -54,27 +55,41 @@ export default function Page() {
         padding: 'clamp(12px, 3vw, 16px) clamp(12px, 4vw, 24px)',
         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3)'
       }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-          <h1 style={{ 
-            fontSize: 'clamp(18px, 5vw, 28px)', 
-            fontWeight: '700', 
-            margin: '0 0 clamp(4px, 1vw, 6px) 0',
-            background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            lineHeight: '1.2'
-          }}>
-            Nagpur Water Quality Monitoring System
-          </h1>
-          <p style={{ 
-            margin: 0, 
-            color: '#94a3b8',
-            fontSize: 'clamp(11px, 2.5vw, 13px)',
-            lineHeight: '1.4'
-          }}>
-            Comprehensive fluoride & nitrate contamination tracking | 1,126+ testing locations across Nagpur district
-          </p>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: 'clamp(12px, 3vw, 20px)' }}>
+          <div style={{ flexShrink: 0 }}>
+            <Image 
+              src="/fno3.webp" 
+              alt="Nitrate Molecule Structure" 
+              width={80} 
+              height={80}
+              style={{ 
+                filter: 'drop-shadow(0 4px 12px rgba(96, 165, 250, 0.4))',
+                borderRadius: '8px'
+              }}
+            />
+          </div>
+          <div style={{ flex: 1 }}>
+            <h1 style={{ 
+              fontSize: 'clamp(18px, 5vw, 28px)', 
+              fontWeight: '700', 
+              margin: '0 0 clamp(4px, 1vw, 6px) 0',
+              background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              lineHeight: '1.2'
+            }}>
+              Nagpur Water Quality Monitoring System
+            </h1>
+            <p style={{ 
+              margin: 0, 
+              color: '#94a3b8',
+              fontSize: 'clamp(11px, 2.5vw, 13px)',
+              lineHeight: '1.4'
+            }}>
+              Comprehensive fluoride & nitrate contamination tracking | 1,126+ testing locations across Nagpur district
+            </p>
+          </div>
         </div>
       </header>
 
