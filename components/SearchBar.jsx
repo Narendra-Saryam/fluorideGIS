@@ -23,26 +23,22 @@ export default function SearchBar({ geojson, onSelect }) {
       }
     }
     
-    // Level 2: Search by Tehsil + Site Name
-    else if (level === 2 && tehsil.trim() && siteName.trim()) {
-      const tehsilTerm = tehsil.trim().toLowerCase();
+    // Level 2: Search by Site Name only
+    else if (level === 2 && siteName.trim()) {
       const siteTerm = siteName.trim().toLowerCase();
       const match = geojson.features.find(f => 
-        f.properties.block?.toLowerCase().includes(tehsilTerm) &&
-        (f.properties.location?.toLowerCase().includes(siteTerm) ||
-         f.properties.village?.toLowerCase().includes(siteTerm))
+        f.properties.location?.toLowerCase().includes(siteTerm) ||
+        f.properties.village?.toLowerCase().includes(siteTerm)
       );
       if (match) {
         onSelect({ type: 'feature', data: match });
       } else {
-        alert('Location not found with that Tehsil and Site combination.');
+        alert('Site not found. Please try another location.');
       }
     }
     
-    // Level 3: Search by Tehsil + Site + Coordinates
-    else if (level === 3 && tehsil.trim() && siteName.trim() && coordinates.trim()) {
-      const tehsilTerm = tehsil.trim().toLowerCase();
-      const siteTerm = siteName.trim().toLowerCase();
+    // Level 3: Search by Coordinates only
+    else if (level === 3 && coordinates.trim()) {
       const coordParts = coordinates.trim().split(',').map(c => c.trim());
       
       if (coordParts.length !== 2) {
@@ -60,10 +56,7 @@ export default function SearchBar({ geojson, onSelect }) {
       
       const match = geojson.features.find(f => {
         const [fLng, fLat] = f.geometry.coordinates;
-        return f.properties.block?.toLowerCase().includes(tehsilTerm) &&
-               (f.properties.location?.toLowerCase().includes(siteTerm) ||
-                f.properties.village?.toLowerCase().includes(siteTerm)) &&
-               Math.abs(fLat - lat) < 0.001 &&
+        return Math.abs(fLat - lat) < 0.001 &&
                Math.abs(fLng - lng) < 0.001;
       });
       
@@ -201,7 +194,7 @@ export default function SearchBar({ geojson, onSelect }) {
             e.target.style.boxShadow = '0 4px 15px rgba(240, 147, 251, 0.4)';
           }}
         >
-          📍 Tehsil + Site
+          📍 Search Site
         </button>
         <button
           onClick={() => handleSearch(3)}
@@ -227,7 +220,7 @@ export default function SearchBar({ geojson, onSelect }) {
             e.target.style.boxShadow = '0 4px 15px rgba(79, 172, 254, 0.4)';
           }}
         >
-          🎯 Precise Search
+          🎯 Coordinates
         </button>
       </div>
     </div>
