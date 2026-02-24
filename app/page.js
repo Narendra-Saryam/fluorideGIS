@@ -3,6 +3,7 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import SearchBar from "../components/SearchBar";
+import IoTSensorPanel from "../components/IoTSensorPanel";
 
 const MapComponent = dynamic(() => import("../components/MapComponent"), { ssr: false });
 
@@ -160,6 +161,8 @@ export default function Page() {
             {geojson && <MapComponent onFeatureClick={handleSelect} onMapReady={setMapRef} />}
           </div>
         </div>
+
+        <IoTSensorPanel />
 
         {/* Legend */}
         <div style={{
